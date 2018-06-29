@@ -3,10 +3,13 @@
 
 (defvar *buffer-size* 64)
 
+(deftype token-vector (&optional (size '*))
+  `(array token (,size)))
+
 (defclass item ()
   ((tokens :initform #()
            :accessor item-tokens
-           :type simple-vector)))
+           :type (simple-array token (*)))))
 
 (defgeneric item-character (item))
 (defgeneric item-line (item))
@@ -32,7 +35,7 @@
 (defclass parser (super-stream input-stream)
   ((buffer :initform (make-buffer)
            :accessor parser-buffer
-           :type (vector token))
+           :type token-vector)
    (eof-p :initform nil
           :accessor parser-eof-p
           :type boolean)
@@ -46,6 +49,11 @@
           :accessor parser-stack
           :type list)))
 
+(defgeneric parser-parse (parser))
+
+(declaim (ftype (function (parser) token-vector) parser-buffer))
+(declaim (ftype (function (parser) fixnum) parser-match-start))
+
 (defmethod stream-element-type ((stream parser))
   'item)
 
@@ -57,7 +65,6 @@
 (defmethod parser-token ((pr parser) (index integer))
   (declare (type fixnum index))
   (let ((buf (parser-buffer pr)))
-    (declare (type (vector token) buf))
     (when (< index (fill-pointer buf))
       (aref buf index))))
 
@@ -76,7 +83,7 @@
   (declare (type fixnum n))
   (loop
      (let ((length (- (the fixnum (fill-pointer (parser-buffer pr)))
-                      (the fixnum (parser-match-start pr)))))
+                      (parser-match-start pr))))
        (declare (type fixnum length))
        (unless (< length n)
          (return t))
@@ -88,18 +95,17 @@
   (declare (type fixnum index))
   (when (parser-input-n pr (the fixnum (1+ index)))
     (let ((buf (parser-buffer pr))
-          (match-index (+ (the fixnum (parser-match-start pr))
+          (match-index (+ (parser-match-start pr)
                           index)))
-      (declare (type vector buf)
-               (type fixnum match-index))
-      (aref (the (vector token) buf) match-index))))
+      (declare (type fixnum match-index))
+      (aref buf match-index))))
 
 ;;  Matcher
 
 (defmethod match ((pr parser) (type symbol))
   (let ((item (parser-match-token pr 0)))
     (when (and item (subtypep (type-of item) (find-class type)))
-      (incf (the fixnum (parser-match-start pr)))
+      (incf (parser-match-start pr))
       item)))
 
 (defmethod match-or ((pr parser) (types cons))
@@ -179,7 +185,7 @@
 
 (defmethod parser-pop ((pr parser))
   (assert (parser-stack pr))
-  (let* ((buffer (the (vector token) (parser-buffer pr)))
+  (let* ((buffer (parser-buffer pr))
 	 (fp (fill-pointer buffer))
 	 (start (pop (parser-stack pr)))
 	 (match-start (parser-match-start pr))
@@ -193,7 +199,7 @@
 
 (defmethod parser-discard ((pr parser))
   (assert (parser-stack pr))
-  (let* ((buffer (the (vector token) (parser-buffer pr)))
+  (let* ((buffer (parser-buffer pr))
 	 (fp (fill-pointer buffer))
 	 (match-start (parser-match-start pr)))
     (pop (parser-stack pr))
