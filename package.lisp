@@ -25,6 +25,7 @@
    #:match-or
    #:match-sequence
    #:match-times
+   #:parser
    #:parser-buffer
    #:parser-discard
    #:parser-eof-p
@@ -33,10 +34,10 @@
    #:parser-input-n
    #:parser-match-start
    #:parser-match-token
+   #:parser-parse
    #:parser-pop
    #:parser-push
    #:parser-push-extend
    #:parser-stack
-   #:parser
    #:parser-token
    ))
