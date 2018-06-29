@@ -3,8 +3,17 @@
 
 (defpackage :parser-stream
   (:use :cl-stream
-        :common-lisp)
+        :common-lisp
+        :token-stream)
   #.(cl-stream:shadowing-import-from)
+  (:shadow
+   #:*buffer-size*
+   #:match
+   #:match-not
+   #:match-option
+   #:match-sequence
+   #:match-times
+   )
   (:export
    #:item
    #:item-character

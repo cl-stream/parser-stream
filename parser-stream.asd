@@ -27,8 +27,8 @@
   :name "parser-stream"
   :author "Thomas de Grivel <thoxdg@gmail.com>"
   :version "0.1"
-  :description "LESS lexer as a cl-stream/token-stream"
-  :depends-on ("css-lexer")
+  :description "Parser class for cl-stream/token-stream"
+  :depends-on ("token-stream")
   :components
   ((:file "package")
    (:file "parser" :depends-on ("package"))))
